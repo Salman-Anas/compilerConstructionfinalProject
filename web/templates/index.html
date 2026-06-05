@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS471L Compiler Dashboard</title>
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-panel: #1e293b;
+            --accent: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --error: #ef4444;
+            --success: #22c55e;
+            --border: #334155;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; }
+        
+        header { padding: 1rem 2rem; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.2rem; font-weight: 600; color: var(--accent); }
+        header span { font-size: 0.9rem; color: var(--text-muted); }
+
+        .container { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 1rem; padding: 1rem; flex: 1; overflow: hidden; }
+        .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .panel-header { padding: 0.75rem 1rem; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border); font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); }
+        .panel-content { padding: 1rem; flex: 1; overflow-y: auto; font-family: 'Fira Code', monospace; font-size: 0.85rem; }
+
+        /* Code Editor */
+        textarea { width: 100%; height: 100%; background: transparent; border: none; color: var(--accent); font-family: 'Fira Code', monospace; font-size: 0.9rem; resize: none; outline: none; }
+        
+        /* Token Stream */
+        .token-stream { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .token { background: #0f172a; border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; display: flex; flex-direction: column; align-items: center; }
+        .token-val { color: var(--success); font-weight: bold; }
+        .token-tag { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+
+        /* Symbol Table */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+        th { color: var(--accent); font-weight: normal; }
+
+        /* Terminal Logs */
+        .log-line { margin-bottom: 4px; color: var(--text-muted); }
+        .log-error { color: var(--error); font-weight: bold; }
+        
+        .controls { padding: 1rem; display: flex; gap: 1rem; justify-content: flex-end; }
+        button { background: var(--accent); color: #000; border: none; padding: 0.5rem 1.5rem; border-radius: 4px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        button:hover { box-shadow: 0 0 10px var(--accent); }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>⚡ CS471L Compiler Visualizer</h1>
+    </header>
+
+    <div class="container">
+        <div class="panel">
+            <div class="panel-header">1. Source Code</div>
+            <div class="panel-content">
+                <textarea id="source-code" spellcheck="false">program demo ;
+begin
+    radius := 5 ;
+    pi := 3 ;
+    area := pi * ( radius * radius )
+end .</textarea>
+            </div>
+            <div class="controls">
+                <button onclick="compile()">Compile >></button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">2. Lexical Tokens</div>
+            <div class="panel-content token-stream" id="token-output">
+                <span style="color: var(--text-muted);">Awaiting compilation...</span>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">3. Symbol Table (Scope Memory)</div>
+            <div class="panel-content" style="padding: 0;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Identifier</th>
+                            <th>Kind</th>
+                            <th>Type</th>
+                            <th>Scope</th>
+                            <th>Line</th>
+                        </tr>
+                    </thead>
+                    <tbody id="symbol-table-body">
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1rem;">Awaiting compilation...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">4. Parse Trace & Errors</div>
+            <div class="panel-content" id="terminal-output">
+                <div class="log-line">System ready.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function compile() {
+            const code = document.getElementById('source-code').value;
+            
+            // Clear UI
+            document.getElementById('token-output').innerHTML = 'Processing...';
+            document.getElementById('symbol-table-body').innerHTML = '';
+            document.getElementById('terminal-output').innerHTML = '';
+
+            try {
+                const response = await fetch('/compile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
+                });
+                
+                const data = await response.json();
+
+                // Render Tokens
+                const tokenHtml = data.tokens.map(t => 
+                    `<div class="token">
+                        <span class="token-val">${t.value}</span>
+                        <span class="token-tag">${t.tag}</span>
+                    </div>`
+                ).join('');
+                document.getElementById('token-output').innerHTML = tokenHtml;
+
+                // Render Symbol Table
+                let tableHtml = '';
+                data.symbol_table.forEach((scope, level) => {
+                    for (const [name, info] of Object.entries(scope)) {
+                        tableHtml += `
+                            <tr>
+                                <td><strong>${name}</strong></td>
+                                <td>${info.kind}</td>
+                                <td>${info.type || 'N/A'}</td>
+                                <td>Level ${level}</td>
+                                <td>${info.line}</td>
+                            </tr>
+                        `;
+                    }
+                });
+                document.getElementById('symbol-table-body').innerHTML = tableHtml || '<tr><td colspan="5">No variables declared.</td></tr>';
+
+                // Render Terminal Trace and Errors
+                let terminalHtml = '';
+                if (data.errors.length > 0) {
+                    terminalHtml += data.errors.map(err => `<div class="log-line log-error">❌ ${err}</div>`).join('');
+                    terminalHtml += `<div class="log-line" style="margin-top: 10px; border-bottom: 1px dashed var(--border);"></div>`;
+                }
+                
+                // Format the standard output into clean lines
+                const logLines = data.terminal_log.split('\n');
+                terminalHtml += logLines.map(line => `<div class="log-line">${line}</div>`).join('');
+                
+                document.getElementById('terminal-output').innerHTML = terminalHtml;
+
+            } catch (err) {
+                document.getElementById('terminal-output').innerHTML = `<div class="log-line log-error">Server Connection Error: ${err}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

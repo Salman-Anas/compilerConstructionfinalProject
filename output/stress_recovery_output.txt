@@ -1,0 +1,31 @@
+Compiling 'test/stress_recovery.pas'...
+Error at Line 5, Col 18: Expected ID, NUM, or '('
+-> Entering panic mode recovery...
+Error at Line 10, Col 34: Expected ), found 'safeVar'
+-> Entering panic mode recovery...
+Error at Line 13, Col 23: Expected ID, NUM, or '('
+-> Entering panic mode recovery...
+
+--- Symbol Table Dump ---
+Scope Level 0: {'stressTest': {'kind': 'program', 'type': None, 'scope': 0, 'line': 2}}
+Scope Level 1: {'brokenVar': {'kind': 'variable', 'type': 'integer', 'scope': 1, 'line': 5}, 'safeVar': {'kind': 'variable', 'type': 'integer', 'scope': 1, 'line': 7}, 'brokenMath': {'kind': 'variable', 'type': 'integer', 'scope': 1, 'line': 10}, 'badTokens': {'kind': 'variable', 'type': 'integer', 'scope': 1, 'line': 13}, 'survivalCheck': {'kind': 'variable', 'type': 'integer', 'scope': 1, 'line': 16}}
+
+--- Starting LL(1) Parse ---
+Error at Line 5, Col 18: LL(1) Syntax Error: Unexpected ';'
+
+--- Starting LR Parse (Expression Trace) ---
+Shift to state 5
+Reduce by rule 6 (F -> ...), Goto state 3
+Reduce by rule 4 (T -> ...), Goto state 2
+Shift to state 7
+Shift to state 5
+Reduce by rule 6 (F -> ...), Goto state 10
+Reduce by rule 3 (T -> ...), Goto state 2
+Reduce by rule 2 (E -> ...), Goto state 1
+LR Parse Accepted!
+
+--- Symbol Table Dump ---
+Scope Level 0: {'stressTest': {'kind': 'program', 'type': None, 'scope': 0, 'line': 2}}
+
+--- Compilation Summary ---
+4 Errors detected.

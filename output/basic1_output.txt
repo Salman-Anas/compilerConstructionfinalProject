@@ -1,0 +1,25 @@
+Compiling 'test/basic1.pas'...
+
+--- Symbol Table Dump ---
+Scope Level 0: {'basic1': {'kind': 'program', 'type': None, 'scope': 0, 'line': 1}}
+Scope Level 1: {'x': {'kind': 'variable', 'type': 'integer', 'scope': 1, 'line': 3}, 'y': {'kind': 'variable', 'type': 'integer', 'scope': 1, 'line': 4}}
+
+--- Starting LL(1) Parse ---
+
+--- Starting LR Parse (Expression Trace) ---
+Shift to state 5
+Reduce by rule 6 (F -> ...), Goto state 3
+Reduce by rule 4 (T -> ...), Goto state 2
+Reduce by rule 2 (E -> ...), Goto state 1
+Shift to state 6
+Shift to state 5
+Reduce by rule 6 (F -> ...), Goto state 3
+Reduce by rule 4 (T -> ...), Goto state 9
+Reduce by rule 1 (E -> ...), Goto state 1
+LR Parse Accepted!
+
+--- Symbol Table Dump ---
+Scope Level 0: {'basic1': {'kind': 'program', 'type': None, 'scope': 0, 'line': 1}}
+
+--- Compilation Summary ---
+0 Errors found. Compilation successful!

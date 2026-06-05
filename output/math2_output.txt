@@ -1,0 +1,33 @@
+Compiling 'test/math2.pas'...
+
+--- Symbol Table Dump ---
+Scope Level 0: {'math2': {'kind': 'program', 'type': None, 'scope': 0, 'line': 2}}
+Scope Level 1: {'radius': {'kind': 'variable', 'type': 'integer', 'scope': 1, 'line': 4}, 'pi': {'kind': 'variable', 'type': 'integer', 'scope': 1, 'line': 5}, 'area': {'kind': 'variable', 'type': 'integer', 'scope': 1, 'line': 6}}
+
+--- Starting LL(1) Parse ---
+
+--- Starting LR Parse (Expression Trace) ---
+Shift to state 5
+Reduce by rule 6 (F -> ...), Goto state 3
+Reduce by rule 4 (T -> ...), Goto state 2
+Shift to state 7
+Shift to state 4
+Shift to state 5
+Reduce by rule 6 (F -> ...), Goto state 3
+Reduce by rule 4 (T -> ...), Goto state 2
+Shift to state 7
+Shift to state 5
+Reduce by rule 6 (F -> ...), Goto state 10
+Reduce by rule 3 (T -> ...), Goto state 2
+Reduce by rule 2 (E -> ...), Goto state 8
+Shift to state 11
+Reduce by rule 5 (F -> ...), Goto state 10
+Reduce by rule 3 (T -> ...), Goto state 2
+Reduce by rule 2 (E -> ...), Goto state 1
+LR Parse Accepted!
+
+--- Symbol Table Dump ---
+Scope Level 0: {'math2': {'kind': 'program', 'type': None, 'scope': 0, 'line': 2}}
+
+--- Compilation Summary ---
+0 Errors found. Compilation successful!

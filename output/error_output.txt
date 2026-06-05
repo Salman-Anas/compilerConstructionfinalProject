@@ -1,0 +1,25 @@
+Compiling 'test/errorTest.pas'...
+Error at Line 3, Col 14: Expected ID, NUM, or '('
+-> Entering panic mode recovery...
+Error at Line 4, Col 18: Expected ), found ';'
+-> Entering panic mode recovery...
+
+--- Symbol Table Dump ---
+Scope Level 0: {'errorTest': {'kind': 'program', 'type': None, 'scope': 0, 'line': 1}}
+Scope Level 1: {'a': {'kind': 'variable', 'type': 'integer', 'scope': 1, 'line': 3}, 'b': {'kind': 'variable', 'type': 'integer', 'scope': 1, 'line': 4}, 'c': {'kind': 'variable', 'type': 'integer', 'scope': 1, 'line': 5}}
+
+--- Starting LL(1) Parse ---
+Error at Line 3, Col 14: LL(1) Syntax Error: Unexpected '*'
+
+--- Starting LR Parse (Expression Trace) ---
+Shift to state 5
+Reduce by rule 6 (F -> ...), Goto state 3
+Reduce by rule 4 (T -> ...), Goto state 2
+Reduce by rule 2 (E -> ...), Goto state 1
+LR Parse Accepted!
+
+--- Symbol Table Dump ---
+Scope Level 0: {'errorTest': {'kind': 'program', 'type': None, 'scope': 0, 'line': 1}}
+
+--- Compilation Summary ---
+3 Errors detected.
