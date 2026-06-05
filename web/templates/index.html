@@ -5,121 +5,617 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CS471L Compiler Dashboard</title>
     <style>
-        :root {
-            --bg-main: #0f172a;
-            --bg-panel: #1e293b;
-            --accent: #38bdf8;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --error: #ef4444;
-            --success: #22c55e;
-            --border: #334155;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background-color: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; }
-        
-        header { padding: 1rem 2rem; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        header h1 { font-size: 1.2rem; font-weight: 600; color: var(--accent); }
-        header span { font-size: 0.9rem; color: var(--text-muted); }
 
-        .container { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 1rem; padding: 1rem; flex: 1; overflow: hidden; }
-        .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .panel-header { padding: 0.75rem 1rem; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border); font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); }
-        .panel-content { padding: 1rem; flex: 1; overflow-y: auto; font-family: 'Fira Code', monospace; font-size: 0.85rem; }
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-panel: #242424;
+            --bg-input: #1f1f1f;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --accent: #4a9eff;
+            --accent-dark: #2a6ecc;
+            --error: #ff4444;
+            --warning: #ffaa44;
+            --success: #44ff44;
+            --border: #333333;
+        }
 
-        /* Code Editor */
-        textarea { width: 100%; height: 100%; background: transparent; border: none; color: var(--accent); font-family: 'Fira Code', monospace; font-size: 0.9rem; resize: none; outline: none; }
-        
-        /* Token Stream */
-        .token-stream { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-        .token { background: #0f172a; border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; display: flex; flex-direction: column; align-items: center; }
-        .token-val { color: var(--success); font-weight: bold; }
-        .token-tag { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+        }
 
-        /* Symbol Table */
-        table { width: 100%; border-collapse: collapse; }
-        th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
-        th { color: var(--accent); font-weight: normal; }
+        .layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            grid-template-rows: 60px 1fr;
+            height: 100vh;
+        }
 
-        /* Terminal Logs */
-        .log-line { margin-bottom: 4px; color: var(--text-muted); }
-        .log-error { color: var(--error); font-weight: bold; }
-        
-        .controls { padding: 1rem; display: flex; gap: 1rem; justify-content: flex-end; }
-        button { background: var(--accent); color: #000; border: none; padding: 0.5rem 1.5rem; border-radius: 4px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-        button:hover { box-shadow: 0 0 10px var(--accent); }
+        /* ============ HEADER ============ */
+        header {
+            grid-column: 1 / -1;
+            background: var(--bg-panel);
+            border-bottom: 2px solid var(--accent);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
 
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-main); }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        .header-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .header-status {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* ============ SIDEBAR ============ */
+        .sidebar {
+            grid-row: 2;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent);
+            padding: 0.5rem 1.5rem;
+            font-weight: 700;
+            opacity: 0.9;
+        }
+
+        .nav-item {
+            padding: 0.8rem 1.5rem;
+            margin: 0.3rem 0.7rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+
+        .nav-item:hover {
+            background: rgba(74, 158, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: rgba(74, 158, 255, 0.15);
+            color: var(--accent);
+            border-left-color: var(--accent);
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+        }
+
+        /* ============ MAIN CONTENT ============ */
+        .main-content {
+            grid-row: 2;
+            grid-column: 2;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg-dark);
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            display: none;
+            padding: 1.5rem;
+            gap: 1.5rem;
+            flex-direction: column;
+        }
+
+        .content-area.active {
+            display: flex;
+        }
+
+        /* ============ PANEL ============ */
+        .panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            min-height: 0;
+        }
+
+        .panel-header {
+            background: rgba(74, 158, 255, 0.08);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* ============ EDITOR ============ */
+        textarea {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-input);
+            border: none;
+            color: var(--accent);
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            resize: none;
+            outline: none;
+            caret-color: var(--accent);
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        textarea::selection {
+            background: rgba(74, 158, 255, 0.3);
+        }
+
+        /* ============ BUTTONS ============ */
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.4rem;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: var(--accent-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* ============ ERRORS ============ */
+        .error-box {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            border-radius: 4px;
+            padding: 1rem;
+            color: var(--error);
+            margin-bottom: 1rem;
+        }
+
+        .error-count {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .error-item {
+            margin: 0.5rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        /* ============ TOKENS ============ */
+        .token-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .token {
+            background: rgba(74, 158, 255, 0.08);
+            border: 1px solid var(--accent);
+            padding: 0.5rem 0.8rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .token:hover {
+            background: rgba(74, 158, 255, 0.15);
+            box-shadow: 0 0 8px rgba(74, 158, 255, 0.3);
+        }
+
+        .token-val {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .token-tag {
+            color: var(--text-secondary);
+            margin-left: 0.3rem;
+            font-size: 0.8rem;
+        }
+
+        /* ============ SYMBOL TABLE ============ */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        th {
+            background: rgba(74, 158, 255, 0.1);
+            padding: 0.8rem;
+            text-align: left;
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.8rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        tbody tr:hover {
+            background: rgba(74, 158, 255, 0.05);
+        }
+
+        td strong {
+            color: var(--success);
+        }
+
+        /* ============ TRACE/LOG ============ */
+        .trace-box {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: var(--text-secondary);
+            max-height: 100%;
+            overflow-y: auto;
+        }
+
+        .trace-success {
+            color: var(--success);
+        }
+
+        .trace-error {
+            color: var(--error);
+            font-weight: 600;
+        }
+
+        .trace-info {
+            color: var(--accent);
+        }
+
+        .empty-state {
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 2rem;
+            font-style: italic;
+        }
+
+        /* ============ TWO COLUMN ============ */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            min-height: 0;
+        }
+
+        .two-col .panel {
+            min-height: 0;
+        }
+
+        /* ============ SCROLLBAR ============ */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 1200px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>⚡ CS471L Compiler Visualizer</h1>
-    </header>
+    <div class="layout">
+        <!-- HEADER -->
+        <header>
+            <div class="header-title">CS471L Compiler</div>
+            <div class="header-status">
+                <span class="status-dot"></span>
+                <span id="status-text">Ready</span>
+            </div>
+        </header>
 
-    <div class="container">
-        <div class="panel">
-            <div class="panel-header">1. Source Code</div>
-            <div class="panel-content">
-                <textarea id="source-code" spellcheck="false">program demo ;
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-label">📋 Components</div>
+                <div class="nav-item active" data-view="editor" onclick="switchView('editor')">
+                    <span class="nav-icon">📝</span>
+                    <span>Source Code</span>
+                </div>
+                <div class="nav-item" data-view="lexer" onclick="switchView('lexer')">
+                    <span class="nav-icon">🔤</span>
+                    <span>Lexer Tokens</span>
+                </div>
+                <div class="nav-item" data-view="symbols" onclick="switchView('symbols')">
+                    <span class="nav-icon">📊</span>
+                    <span>Symbol Table</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">🔍 Parsers</div>
+                <div class="nav-item" data-view="rd" onclick="switchView('rd')">
+                    <span class="nav-icon">⬇️</span>
+                    <span>Recursive Descent</span>
+                </div>
+                <div class="nav-item" data-view="ll1" onclick="switchView('ll1')">
+                    <span class="nav-icon">➡️</span>
+                    <span>LL(1) Parser</span>
+                </div>
+                <div class="nav-item" data-view="lr" onclick="switchView('lr')">
+                    <span class="nav-icon">⬅️</span>
+                    <span>LR Parser</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">📈 Summary</div>
+                <div class="nav-item" data-view="summary" onclick="switchView('summary')">
+                    <span class="nav-icon">📋</span>
+                    <span>Full Report</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+
+            <!-- EDITOR VIEW -->
+            <div class="content-area active" id="editor">
+                <div class="panel" style="flex: 1;">
+                    <div class="panel-header">
+                        <span>Source Code Editor</span>
+                        <button class="btn" id="compile-btn" onclick="compile()">▶ Compile</button>
+                    </div>
+                    <div class="panel-content">
+                        <textarea id="source-code" spellcheck="false">program demo ;
 begin
     radius := 5 ;
     pi := 3 ;
     area := pi * ( radius * radius )
 end .</textarea>
+                    </div>
+                </div>
             </div>
-            <div class="controls">
-                <button onclick="compile()">Compile >></button>
-            </div>
-        </div>
 
-        <div class="panel">
-            <div class="panel-header">2. Lexical Tokens</div>
-            <div class="panel-content token-stream" id="token-output">
-                <span style="color: var(--text-muted);">Awaiting compilation...</span>
+            <!-- LEXER VIEW -->
+            <div class="content-area" id="lexer">
+                <div id="lexer-errors-container"></div>
+                <div class="panel">
+                    <div class="panel-header">Lexical Analysis - Token Stream</div>
+                    <div class="panel-content">
+                        <div class="token-list" id="token-output">
+                            <div class="empty-state">Compile to view tokens</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <div class="panel">
-            <div class="panel-header">3. Symbol Table (Scope Memory)</div>
-            <div class="panel-content" style="padding: 0;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Identifier</th>
-                            <th>Kind</th>
-                            <th>Type</th>
-                            <th>Scope</th>
-                            <th>Line</th>
-                        </tr>
-                    </thead>
-                    <tbody id="symbol-table-body">
-                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1rem;">Awaiting compilation...</td></tr>
-                    </tbody>
-                </table>
+            <!-- SYMBOL TABLE VIEW -->
+            <div class="content-area" id="symbols">
+                <div id="symbols-errors-container"></div>
+                <div class="panel">
+                    <div class="panel-header">Symbol Table - Scope & Variable Tracking</div>
+                    <div class="panel-content">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Kind</th>
+                                        <th>Type</th>
+                                        <th>Scope</th>
+                                        <th>Line</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="symbol-table-body">
+                                    <tr><td colspan="5" style="text-align: center; padding: 1.5rem;">Compile to populate table</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <div class="panel">
-            <div class="panel-header">4. Parse Trace & Errors</div>
-            <div class="panel-content" id="terminal-output">
-                <div class="log-line">System ready.</div>
+            <!-- RD PARSER VIEW -->
+            <div class="content-area" id="rd">
+                <div id="rd-errors-container"></div>
+                <div class="panel">
+                    <div class="panel-header">Recursive Descent Parser - Trace</div>
+                    <div class="panel-content">
+                        <div class="trace-box" id="rd-trace">Compile to view parse trace</div>
+                    </div>
+                </div>
             </div>
+
+            <!-- LL(1) PARSER VIEW -->
+            <div class="content-area" id="ll1">
+                <div id="ll1-errors-container"></div>
+                <div class="panel">
+                    <div class="panel-header">LL(1) Predictive Parser - Trace</div>
+                    <div class="panel-content">
+                        <div class="trace-box" id="ll1-trace">Compile to view parse trace</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LR PARSER VIEW -->
+            <div class="content-area" id="lr">
+                <div id="lr-errors-container"></div>
+                <div class="panel">
+                    <div class="panel-header">LR Parser - Expression Parsing Trace</div>
+                    <div class="panel-content">
+                        <div class="trace-box" id="lr-trace">Compile to view parse trace</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUMMARY VIEW -->
+            <div class="content-area" id="summary">
+                <div class="two-col">
+                    <div class="panel">
+                        <div class="panel-header">Compilation Summary</div>
+                        <div class="panel-content">
+                            <div style="line-height: 2;">
+                                <div>Tokens: <strong style="color: var(--accent);" id="sum-tokens">0</strong></div>
+                                <div>Variables: <strong style="color: var(--accent);" id="sum-vars">0</strong></div>
+                                <div>Errors: <strong style="color: var(--error);" id="sum-errors">0</strong></div>
+                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                                    Status: <strong style="color: var(--success);" id="sum-status">Not compiled</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">All Errors & Warnings</div>
+                        <div class="panel-content">
+                            <div id="all-errors-container">
+                                <div class="empty-state">No errors</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <script>
+        let lastCompilationData = null;
+
+        function switchView(viewName) {
+            document.querySelectorAll('.content-area').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(viewName)?.classList.add('active');
+            document.querySelector(`[data-view="${viewName}"]`)?.classList.add('active');
+        }
+
+        function showErrorBox(containerId, errors) {
+            const container = document.getElementById(containerId);
+            if (!errors || errors.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = `<div class="error-box">
+                <div class="error-count">❌ ${errors.length} Error(s):</div>`;
+            
+            errors.forEach(err => {
+                html += `<div class="error-item">• ${escapeHtml(err)}</div>`;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return String(text).replace(/[&<>"']/g, m => map[m]);
+        }
+
         async function compile() {
             const code = document.getElementById('source-code').value;
+            const btn = document.getElementById('compile-btn');
             
-            // Clear UI
-            document.getElementById('token-output').innerHTML = 'Processing...';
-            document.getElementById('symbol-table-body').innerHTML = '';
-            document.getElementById('terminal-output').innerHTML = '';
+            btn.classList.add('loading');
+            btn.textContent = '⟳ Compiling...';
+            document.getElementById('status-text').textContent = 'Compiling...';
 
             try {
                 const response = await fetch('/compile', {
@@ -127,52 +623,91 @@ end .</textarea>
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ code: code })
                 });
-                
+
                 const data = await response.json();
+                lastCompilationData = data;
 
-                // Render Tokens
-                const tokenHtml = data.tokens.map(t => 
-                    `<div class="token">
-                        <span class="token-val">${t.value}</span>
-                        <span class="token-tag">${t.tag}</span>
-                    </div>`
-                ).join('');
-                document.getElementById('token-output').innerHTML = tokenHtml;
+                // Show errors on all relevant views
+                showErrorBox('lexer-errors-container', data.errors);
+                showErrorBox('symbols-errors-container', data.errors);
+                showErrorBox('rd-errors-container', data.errors);
+                showErrorBox('ll1-errors-container', data.errors);
+                showErrorBox('lr-errors-container', data.errors);
 
-                // Render Symbol Table
+                // RENDER TOKENS
+                const tokenHtml = data.tokens
+                    .filter(t => t.tag !== 'EOF')
+                    .map(t => `<span class="token"><span class="token-val">${escapeHtml(t.value)}</span><span class="token-tag">${escapeHtml(t.tag)}</span></span>`)
+                    .join('');
+                document.getElementById('token-output').innerHTML = tokenHtml || '<div class="empty-state">No tokens generated</div>';
+
+                // RENDER SYMBOL TABLE
                 let tableHtml = '';
                 data.symbol_table.forEach((scope, level) => {
                     for (const [name, info] of Object.entries(scope)) {
-                        tableHtml += `
-                            <tr>
-                                <td><strong>${name}</strong></td>
-                                <td>${info.kind}</td>
-                                <td>${info.type || 'N/A'}</td>
-                                <td>Level ${level}</td>
-                                <td>${info.line}</td>
-                            </tr>
-                        `;
+                        tableHtml += `<tr>
+                            <td><strong>${escapeHtml(name)}</strong></td>
+                            <td>${escapeHtml(info.kind)}</td>
+                            <td>${escapeHtml(info.type || 'N/A')}</td>
+                            <td>Lvl ${level}</td>
+                            <td>${info.line}</td>
+                        </tr>`;
                     }
                 });
-                document.getElementById('symbol-table-body').innerHTML = tableHtml || '<tr><td colspan="5">No variables declared.</td></tr>';
+                document.getElementById('symbol-table-body').innerHTML = tableHtml || 
+                    '<tr><td colspan="5" style="text-align:center; color: var(--text-secondary);">No variables declared</td></tr>';
 
-                // Render Terminal Trace and Errors
-                let terminalHtml = '';
+                // RENDER PARSER TRACES
+               // RENDER PARSER TRACES
+                document.getElementById('rd-trace').textContent =
+                    data.rd_trace || 'No RD trace available';
+
+                document.getElementById('ll1-trace').textContent =
+                    data.ll1_trace || 'No LL(1) trace available';
+
+                document.getElementById('lr-trace').textContent =
+                    data.lr_trace || 'No LR trace available';
+
+                // UPDATE SUMMARY
+                const varCount = Object.values(data.symbol_table).reduce((sum, scope) => sum + Object.keys(scope).length, 0);
+                document.getElementById('sum-tokens').textContent = data.tokens.filter(t => t.tag !== 'EOF').length;
+                document.getElementById('sum-vars').textContent = varCount;
+                document.getElementById('sum-errors').textContent = data.errors.length;
+                document.getElementById('sum-status').textContent = data.errors.length === 0 ? '✓ Success' : '⚠ Has Errors';
+                document.getElementById('sum-status').style.color = data.errors.length === 0 ? 'var(--success)' : 'var(--error)';
+
+                // ALL ERRORS
                 if (data.errors.length > 0) {
-                    terminalHtml += data.errors.map(err => `<div class="log-line log-error">❌ ${err}</div>`).join('');
-                    terminalHtml += `<div class="log-line" style="margin-top: 10px; border-bottom: 1px dashed var(--border);"></div>`;
+                    const errHtml = data.errors.map(e => `<div class="error-item">• ${escapeHtml(e)}</div>`).join('');
+                    document.getElementById('all-errors-container').innerHTML = errHtml;
+                } else {
+                    document.getElementById('all-errors-container').innerHTML = '<div class="empty-state">✓ No errors</div>';
                 }
+
+                btn.classList.remove('loading');
+                btn.textContent = '✓ Done';
+                document.getElementById('status-text').textContent = `Compiled (${data.errors.length} errors)`;
                 
-                // Format the standard output into clean lines
-                const logLines = data.terminal_log.split('\n');
-                terminalHtml += logLines.map(line => `<div class="log-line">${line}</div>`).join('');
-                
-                document.getElementById('terminal-output').innerHTML = terminalHtml;
+                setTimeout(() => { btn.textContent = '▶ Compile'; }, 2000);
 
             } catch (err) {
-                document.getElementById('terminal-output').innerHTML = `<div class="log-line log-error">Server Connection Error: ${err}</div>`;
+                alert('Error: ' + err.message);
+                btn.classList.remove('loading');
+                btn.textContent = '▶ Compile';
+                document.getElementById('status-text').textContent = 'Error';
             }
         }
+
+        function extractSection(text, marker) {
+            const lines = text.split('\n');
+            const startIdx = lines.findIndex(l => l.includes(marker));
+            if (startIdx === -1) return null;
+            
+            const endIdx = lines.findIndex((l, i) => i > startIdx && l.includes('---'));
+            const section = lines.slice(startIdx + 1, endIdx === -1 ? undefined : endIdx).join('\n').trim();
+            return section || null;
+        }
     </script>
+
 </body>
 </html>
