@@ -3,711 +3,738 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CS471L Compiler Dashboard</title>
+    <title>CS471L Compiler - Cyber Alchemist</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --bg-dark: #1a1a1a;
-            --bg-panel: #242424;
-            --bg-input: #1f1f1f;
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0b0;
-            --accent: #4a9eff;
-            --accent-dark: #2a6ecc;
-            --error: #ff4444;
-            --warning: #ffaa44;
-            --success: #44ff44;
-            --border: #333333;
+            --bg-obsidian: #0F111A;
+            --bg-slate: #1E2235;
+            --bg-input: #151922;
+            --text-white: #FFFFFF;
+            --text-secondary: #A8B5C8;
+            --accent-cyan: #00B0FF;
+            --accent-emerald: #00E676;
+            --accent-amber: #FF9100;
+            --accent-red: #FF3B3B;
+            --accent-purple: #B388FF;
+            --glass-dark: rgba(30, 34, 53, 0.8);
         }
 
         html, body {
-            width: 100%;
-            height: 100%;
-            background: var(--bg-dark);
-            color: var(--text-primary);
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-            overflow: hidden;
+            width: 100%; min-height: 100%;
+            background: var(--bg-obsidian);
+            color: var(--text-white);
+            font-family: 'JetBrains Mono', monospace;
+            overflow-x: hidden; overflow-y: auto;
         }
 
-        .layout {
-            display: grid;
-            grid-template-columns: 260px 1fr;
-            grid-template-rows: 60px 1fr;
-            height: 100vh;
-        }
+        .layout { display: grid; grid-template-rows: 70px 50px 1fr; min-height: 100vh; }
 
         /* ============ HEADER ============ */
         header {
-            grid-column: 1 / -1;
-            background: var(--bg-panel);
-            border-bottom: 2px solid var(--accent);
-            padding: 0 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, var(--bg-slate) 0%, rgba(0, 176, 255, 0.05) 100%);
+            border-bottom: 2px solid var(--accent-cyan);
+            padding: 0 2rem; display: flex; align-items: center;
+            justify-content: space-between; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
-
         .header-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--accent);
+            font-size: 1.4rem; font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-emerald));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
-
-        .header-status {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
+        .status-badge {
+            background: rgba(0,230,118,0.15); border: 1px solid var(--accent-emerald);
+            color: var(--accent-emerald); padding: 0.5rem 1rem; border-radius: 4px;
+            font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;
         }
-
         .status-dot {
-            width: 10px;
-            height: 10px;
-            background: var(--success);
-            border-radius: 50%;
-            display: inline-block;
+            width: 8px; height: 8px; background: var(--accent-emerald); border-radius: 50%;
+            animation: pulse 2s infinite; box-shadow: 0 0 10px var(--accent-emerald);
         }
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
 
-        /* ============ SIDEBAR ============ */
-        .sidebar {
-            grid-row: 2;
-            background: var(--bg-panel);
-            border-right: 1px solid var(--border);
-            padding: 1.5rem 0;
-            overflow-y: auto;
+        /* ============ PROGRESS TRACKER ============ */
+        .progress-tracker {
+            background: var(--bg-slate); border-bottom: 1px solid rgba(0,176,255,0.2);
+            padding: 0.8rem 2rem; display: flex; gap: 2rem; align-items: center; overflow-x: auto;
         }
+        .phase { display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; color: var(--text-secondary); white-space: nowrap; }
+        .phase.active { color: var(--accent-cyan); font-weight: 600; }
+        .phase-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--text-secondary); transition: all 0.3s ease; }
+        .phase.active .phase-dot { background: var(--accent-cyan); border-color: var(--accent-cyan); box-shadow: 0 0 12px var(--accent-cyan); }
 
-        .sidebar-section {
-            margin-bottom: 2rem;
+        /* ============ MAIN GRID ============ */
+        .main-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;
+            padding: 0.8rem; min-height: 0; height: auto;
+            grid-auto-rows: minmax(360px, auto);
         }
-
-        .sidebar-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--accent);
-            padding: 0.5rem 1.5rem;
-            font-weight: 700;
-            opacity: 0.9;
+        .pane {
+            display: flex; flex-direction: column; background: var(--glass-dark);
+            border: 1px solid rgba(0,176,255,0.2); border-radius: 6px; overflow: hidden;
+            backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
-
-        .nav-item {
-            padding: 0.8rem 1.5rem;
-            margin: 0.3rem 0.7rem;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border-left: 3px solid transparent;
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 0.7rem;
+        .pane-header {
+            background: rgba(0,176,255,0.08); border-bottom: 1px solid rgba(0,176,255,0.2);
+            padding: 0.8rem 1rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--accent-cyan); font-weight: 600; display: flex; justify-content: space-between;
+            align-items: center; flex-shrink: 0;
         }
-
-        .nav-item:hover {
-            background: rgba(74, 158, 255, 0.1);
-            color: var(--text-primary);
-        }
-
-        .nav-item.active {
-            background: rgba(74, 158, 255, 0.15);
-            color: var(--accent);
-            border-left-color: var(--accent);
-            font-weight: 600;
-        }
-
-        .nav-icon {
-            font-size: 1.2rem;
-        }
-
-        /* ============ MAIN CONTENT ============ */
-        .main-content {
-            grid-row: 2;
-            grid-column: 2;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            background: var(--bg-dark);
-        }
-
-        .content-area {
-            flex: 1;
-            overflow-y: auto;
-            display: none;
-            padding: 1.5rem;
-            gap: 1.5rem;
-            flex-direction: column;
-        }
-
-        .content-area.active {
-            display: flex;
-        }
-
-        /* ============ PANEL ============ */
-        .panel {
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            min-height: 0;
-        }
-
-        .panel-header {
-            background: rgba(74, 158, 255, 0.08);
-            border-bottom: 1px solid var(--border);
-            padding: 1rem;
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .panel-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
+        .pane-content { flex: 1; overflow: auto; padding: 0.8rem; }
 
         /* ============ EDITOR ============ */
         textarea {
-            width: 100%;
-            height: 100%;
-            background: var(--bg-input);
-            border: none;
-            color: var(--accent);
-            font-family: 'Courier New', monospace;
-            font-size: 0.95rem;
-            resize: none;
-            outline: none;
-            caret-color: var(--accent);
-            padding: 1rem;
-            box-sizing: border-box;
+            width: 100%; height: 100%; background: var(--bg-input); border: none;
+            color: var(--accent-emerald); font-family: 'Fira Code', monospace; font-size: 0.9rem;
+            resize: none; outline: none; caret-color: var(--accent-cyan); padding: 1rem; line-height: 1.6;
         }
 
-        textarea::selection {
-            background: rgba(74, 158, 255, 0.3);
+        /* ============ TABS ============ */
+        .tabs {
+            display: flex; gap: 0.3rem; padding: 0.5rem; background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(0,176,255,0.2); overflow-x: auto; flex-shrink: 0;
         }
-
-        /* ============ BUTTONS ============ */
-        .btn {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 0.6rem 1.4rem;
-            border-radius: 4px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
+        .tab {
+            padding: 0.5rem 1rem; background: rgba(0,176,255,0.05); border: 1px solid rgba(0,176,255,0.1);
+            color: var(--text-secondary); cursor: pointer; border-radius: 3px; font-size: 0.75rem;
+            font-weight: 600; transition: all 0.2s ease; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;
         }
-
-        .btn:hover {
-            background: var(--accent-dark);
-            transform: translateY(-1px);
+        .tab:hover { background: rgba(0,176,255,0.15); color: var(--accent-cyan); }
+        .tab.active {
+            background: rgba(0,176,255,0.15); color: var(--accent-cyan);
+            border-color: var(--accent-cyan); box-shadow: 0 -2px 8px rgba(0,176,255,0.2);
         }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn.loading {
-            opacity: 0.7;
-            pointer-events: none;
-        }
-
-        /* ============ ERRORS ============ */
-        .error-box {
-            background: rgba(255, 68, 68, 0.1);
-            border: 1px solid var(--error);
-            border-radius: 4px;
-            padding: 1rem;
-            color: var(--error);
-            margin-bottom: 1rem;
-        }
-
-        .error-count {
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .error-item {
-            margin: 0.5rem 0;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-        }
+        .tab-content { display: none; flex: 1; overflow: auto; }
+        .tab-content.active { display: block; }
 
         /* ============ TOKENS ============ */
-        .token-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.8rem;
-        }
-
+        .token-grid { display: flex; flex-wrap: wrap; gap: 0.6rem; }
         .token {
-            background: rgba(74, 158, 255, 0.08);
-            border: 1px solid var(--accent);
-            padding: 0.5rem 0.8rem;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-            transition: all 0.2s ease;
+            background: rgba(0,176,255,0.08); border: 1px solid var(--accent-cyan);
+            padding: 0.5rem 0.7rem; border-radius: 3px; font-size: 0.8rem; transition: all 0.2s ease; text-align: center;
         }
+        .token:hover { background: rgba(0,176,255,0.15); box-shadow: 0 0 12px rgba(0,176,255,0.3); transform: translateY(-1px); }
+        .token-val { color: var(--accent-emerald); font-weight: 700; display: block; }
+        .token-tag { color: var(--accent-cyan); font-size: 0.7rem; opacity: 0.7; margin-top: 0.2rem; }
 
-        .token:hover {
-            background: rgba(74, 158, 255, 0.15);
-            box-shadow: 0 0 8px rgba(74, 158, 255, 0.3);
-        }
-
-        .token-val {
-            color: var(--success);
-            font-weight: 700;
-        }
-
-        .token-tag {
-            color: var(--text-secondary);
-            margin-left: 0.3rem;
-            font-size: 0.8rem;
-        }
-
-        /* ============ SYMBOL TABLE ============ */
-        .table-wrapper {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-            font-family: 'Courier New', monospace;
-        }
-
+        /* ============ TABLES ============ */
+        .table-wrapper { width: 100%; overflow: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         th {
-            background: rgba(74, 158, 255, 0.1);
-            padding: 0.8rem;
-            text-align: left;
-            color: var(--accent);
-            border-bottom: 2px solid var(--accent);
-            font-weight: 600;
-            white-space: nowrap;
+            background: rgba(0,176,255,0.1); padding: 0.6rem; text-align: left; color: var(--accent-cyan);
+            border-bottom: 2px solid var(--accent-cyan); font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.3px; font-size: 0.75rem; white-space: nowrap;
+        }
+        td { padding: 0.6rem; border-bottom: 1px solid rgba(0,176,255,0.1); color: var(--text-secondary); }
+        tbody tr:hover { background: rgba(0,176,255,0.08); }
+        td strong { color: var(--accent-emerald); }
+
+        /* ============ VISUALIZER (tree / automaton) ============ */
+        .viz { position: relative; }
+        .viz-toolbar {
+            position: sticky; top: 0; left: 0; z-index: 5; display: flex; gap: 0.3rem;
+            margin-bottom: 0.4rem;
+        }
+        .viz-toolbar button {
+            background: rgba(0,176,255,0.1); border: 1px solid rgba(0,176,255,0.3);
+            color: var(--accent-cyan); border-radius: 3px; cursor: pointer; font-family: inherit;
+            font-size: 0.75rem; padding: 0.25rem 0.6rem; font-weight: 700;
+        }
+        .viz-toolbar button:hover { background: rgba(0,176,255,0.25); }
+        .viz-canvas { overflow: visible; }
+        .viz-canvas svg { display: block; }
+
+        /* ============ EXPAND BUTTON + FULLSCREEN MODAL ============ */
+        .tabs-spacer { flex: 1; }
+        .expand-btn {
+            flex-shrink: 0; background: rgba(0,230,118,0.08); border: 1px solid rgba(0,230,118,0.4);
+            color: var(--accent-emerald); cursor: pointer; border-radius: 3px; font-size: 0.8rem;
+            font-weight: 700; padding: 0.4rem 0.7rem; font-family: inherit; transition: all 0.2s ease;
+        }
+        .expand-btn:hover { background: rgba(0,230,118,0.2); box-shadow: 0 0 12px rgba(0,230,118,0.25); }
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 1000; display: none;
+            background: rgba(5,6,12,0.82); backdrop-filter: blur(4px); padding: 2.5vh 2.5vw;
+        }
+        .modal-overlay.open { display: block; }
+        .modal {
+            display: flex; flex-direction: column; height: 95vh; width: 95vw;
+            background: var(--bg-obsidian); border: 1px solid var(--accent-cyan);
+            border-radius: 6px; box-shadow: 0 0 40px rgba(0,176,255,0.25); overflow: hidden;
+        }
+        .modal-head {
+            display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1.2rem;
+            border-bottom: 1px solid rgba(0,176,255,0.25); background: rgba(0,0,0,0.25); flex-shrink: 0;
+        }
+        .modal-head .m-title {
+            color: var(--accent-cyan); font-weight: 700; font-size: 0.95rem;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .modal-close {
+            margin-left: auto; background: rgba(255,59,59,0.1); border: 1px solid rgba(255,59,59,0.4);
+            color: var(--accent-red); cursor: pointer; border-radius: 3px; font-size: 0.9rem;
+            font-weight: 700; padding: 0.35rem 0.8rem; font-family: inherit;
+        }
+        .modal-close:hover { background: rgba(255,59,59,0.22); }
+        .modal-body { flex: 1; overflow: auto; padding: 1.2rem; }
+        /* side-by-side tree + output when both present */
+        .fs-split { display: grid; grid-template-columns: 1fr; gap: 1.2rem; }
+        @media (min-width: 1100px) { .fs-split.has-output { grid-template-columns: 2fr 1fr; } }
+        .fs-output { border-left: 1px solid rgba(0,176,255,0.15); padding-left: 1rem; }
+        .fs-output h4 {
+            color: var(--accent-amber); font-size: 0.8rem; text-transform: uppercase;
+            letter-spacing: 0.5px; margin-bottom: 0.6rem;
+        }
+        .fs-output pre {
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(0,176,255,0.12); border-radius: 4px;
+            padding: 0.8rem; font-size: 0.78rem; color: var(--text-secondary);
+            white-space: pre-wrap; word-break: break-word; line-height: 1.5;
         }
 
-        td {
-            padding: 0.8rem;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-secondary);
-        }
+        /* flow tree */
+        .ft-edge { stroke: rgba(0,176,255,0.45); stroke-width: 1.4; fill: none; }
+        .ft-node.inner rect { fill: rgba(0,176,255,0.12); stroke: var(--accent-cyan); stroke-width: 1.3; }
+        .ft-node.leaf rect  { fill: rgba(0,230,118,0.10); stroke: var(--accent-emerald); stroke-width: 1.3; }
+        .ft-node.error rect { fill: rgba(255,59,59,0.12); stroke: var(--accent-red); stroke-width: 1.3; }
+        .ft-node text { font-family: 'Fira Code', monospace; font-size: 10.5px; fill: var(--text-white); }
+        .ft-node.inner text { fill: #cfeaff; }
+        .ft-node.leaf text  { fill: #c8ffe0; }
+        .ft-node.error text { fill: #ffd0d0; }
 
-        tbody tr:hover {
-            background: rgba(74, 158, 255, 0.05);
-        }
+        /* automaton */
+        .auto-edge { stroke: rgba(179,136,255,0.55); stroke-width: 1.4; fill: none; }
+        .arrow-head { fill: rgba(179,136,255,0.85); }
+        .auto-state rect { fill: rgba(30,34,53,0.95); stroke: var(--accent-emerald); stroke-width: 1.3; }
+        .state-title { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; fill: var(--accent-emerald); }
+        .state-item { font-family: 'Fira Code', monospace; font-size: 9.5px; fill: var(--text-secondary); }
+        .edge-label { font-family: 'Fira Code', monospace; font-size: 10px; fill: var(--accent-purple); font-weight: 600; }
 
-        td strong {
-            color: var(--success);
-        }
+        /* grids for LL1 */
+        .grid-title { color: var(--accent-cyan); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin: 0.2rem 0 0.5rem; font-weight: 700; }
+        .ll1-grid td, .ll1-grid th { font-size: 0.72rem; padding: 0.4rem; white-space: nowrap; }
+        .ll1-grid .nt-cell { color: var(--accent-emerald); font-weight: 700; background: rgba(0,230,118,0.06); }
+        .ll1-grid .prod-cell { color: var(--accent-amber); }
+        .step-grid td { font-size: 0.74rem; padding: 0.4rem 0.5rem; font-family: 'Fira Code', monospace; }
+        .step-grid tr.step-apply td  { color: var(--accent-amber); }
+        .step-grid tr.step-match td  { color: var(--accent-emerald); }
+        .step-grid tr.step-shift td  { color: var(--accent-cyan); }
+        .step-grid tr.step-reduce td { color: var(--accent-amber); }
+        .step-grid tr.step-accept td { color: var(--accent-emerald); font-weight: 700; }
+        .step-grid tr.step-error td  { color: var(--accent-red); font-weight: 700; }
 
-        /* ============ TRACE/LOG ============ */
-        .trace-box {
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 1rem;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-            line-height: 1.6;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            color: var(--text-secondary);
-            max-height: 100%;
-            overflow-y: auto;
-        }
+        details.log { margin-top: 1rem; border: 1px solid rgba(0,176,255,0.15); border-radius: 4px; }
+        details.log summary { cursor: pointer; padding: 0.5rem 0.8rem; color: var(--accent-cyan); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        details.log pre { padding: 0.6rem 0.8rem; font-family: 'Fira Code', monospace; font-size: 0.72rem; color: var(--text-secondary); white-space: pre-wrap; line-height: 1.5; }
 
-        .trace-success {
-            color: var(--success);
-        }
+        /* ============ ERROR BOX ============ */
+        .error-box { background: rgba(255,59,59,0.08); border: 1px solid var(--accent-red); border-radius: 4px; padding: 0.8rem; margin-bottom: 0.8rem; }
+        .error-title { color: var(--accent-red); font-weight: 700; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.8rem; }
+        .error-item { color: var(--accent-amber); margin: 0.3rem 0; padding: 0.3rem 0 0.3rem 0.8rem; border-left: 2px solid var(--accent-amber); font-size: 0.8rem; }
 
-        .trace-error {
-            color: var(--error);
-            font-weight: 600;
+        /* ============ BUTTON ============ */
+        .btn-compile {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-emerald)); color: var(--bg-obsidian);
+            border: none; padding: 0.6rem 1.4rem; border-radius: 3px; font-weight: 700; cursor: pointer;
+            font-size: 0.8rem; letter-spacing: 0.5px; text-transform: uppercase; transition: all 0.2s ease;
+            box-shadow: 0 0 15px rgba(0,176,255,0.3);
         }
+        .btn-compile:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,176,255,0.5); }
+        .btn-compile.loading { opacity: 0.6; pointer-events: none; }
 
-        .trace-info {
-            color: var(--accent);
-        }
+        .empty-state { display: flex; align-items: center; justify-content: center; height: 100%; min-height: 80px; color: var(--text-secondary); font-style: italic; text-align: center; }
 
-        .empty-state {
-            color: var(--text-secondary);
-            text-align: center;
-            padding: 2rem;
-            font-style: italic;
-        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,176,255,0.25); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-cyan); }
 
-        /* ============ TWO COLUMN ============ */
-        .two-col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            min-height: 0;
-        }
+        .col-left { grid-column: 1; }
+        .col-right { grid-column: 2; }
+        .row-span-2 { grid-row: span 2; }
+        .pane { min-height: 360px; }
 
-        .two-col .panel {
-            min-height: 0;
-        }
-
-        /* ============ SCROLLBAR ============ */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent);
-        }
-
-        /* ============ RESPONSIVE ============ */
-        @media (max-width: 1200px) {
-            .two-col {
-                grid-template-columns: 1fr;
-            }
+        /* stack into one scrollable column on narrow screens */
+        @media (max-width: 900px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .col-left, .col-right { grid-column: 1; }
+            .row-span-2 { grid-row: auto; }
+            .pane { min-height: 420px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="layout">
-        <!-- HEADER -->
-        <header>
-            <div class="header-title">CS471L Compiler</div>
-            <div class="header-status">
-                <span class="status-dot"></span>
-                <span id="status-text">Ready</span>
+    <header>
+        <div class="header-title">⚡ CS471L COMPILER</div>
+        <div class="status-badge"><span class="status-dot"></span><span id="status-text">Ready</span></div>
+    </header>
+
+    <div class="progress-tracker">
+        <div class="phase active" id="phase-lexer"><div class="phase-dot"></div><span>Lexical</span></div>
+        <div class="phase" id="phase-parser"><div class="phase-dot"></div><span>Parsing</span></div>
+        <div class="phase" id="phase-semantic"><div class="phase-dot"></div><span>Symbols</span></div>
+        <div class="phase" id="phase-complete"><div class="phase-dot"></div><span>Complete</span></div>
+    </div>
+
+    <div class="main-grid">
+
+        <!-- LEFT: SOURCE -->
+        <div class="pane col-left row-span-2">
+            <div class="pane-header">
+                <span>📝 Source Code</span>
+                <button class="btn-compile" id="compile-btn" onclick="compile()">▶ Compile</button>
             </div>
-        </header>
-
-        <!-- SIDEBAR -->
-        <nav class="sidebar">
-            <div class="sidebar-section">
-                <div class="sidebar-label">📋 Components</div>
-                <div class="nav-item active" data-view="editor" onclick="switchView('editor')">
-                    <span class="nav-icon">📝</span>
-                    <span>Source Code</span>
-                </div>
-                <div class="nav-item" data-view="lexer" onclick="switchView('lexer')">
-                    <span class="nav-icon">🔤</span>
-                    <span>Lexer Tokens</span>
-                </div>
-                <div class="nav-item" data-view="symbols" onclick="switchView('symbols')">
-                    <span class="nav-icon">📊</span>
-                    <span>Symbol Table</span>
-                </div>
-            </div>
-
-            <div class="sidebar-section">
-                <div class="sidebar-label">🔍 Parsers</div>
-                <div class="nav-item" data-view="rd" onclick="switchView('rd')">
-                    <span class="nav-icon">⬇️</span>
-                    <span>Recursive Descent</span>
-                </div>
-                <div class="nav-item" data-view="ll1" onclick="switchView('ll1')">
-                    <span class="nav-icon">➡️</span>
-                    <span>LL(1) Parser</span>
-                </div>
-                <div class="nav-item" data-view="lr" onclick="switchView('lr')">
-                    <span class="nav-icon">⬅️</span>
-                    <span>LR Parser</span>
-                </div>
-            </div>
-
-            <div class="sidebar-section">
-                <div class="sidebar-label">📈 Summary</div>
-                <div class="nav-item" data-view="summary" onclick="switchView('summary')">
-                    <span class="nav-icon">📋</span>
-                    <span>Full Report</span>
-                </div>
-            </div>
-        </nav>
-
-        <!-- MAIN CONTENT -->
-        <div class="main-content">
-
-            <!-- EDITOR VIEW -->
-            <div class="content-area active" id="editor">
-                <div class="panel" style="flex: 1;">
-                    <div class="panel-header">
-                        <span>Source Code Editor</span>
-                        <button class="btn" id="compile-btn" onclick="compile()">▶ Compile</button>
-                    </div>
-                    <div class="panel-content">
-                        <textarea id="source-code" spellcheck="false">program demo ;
+            <div class="pane-content">
+                <textarea id="source-code" spellcheck="false">program demo ;
 begin
     radius := 5 ;
     pi := 3 ;
     area := pi * ( radius * radius )
 end .</textarea>
-                    </div>
+            </div>
+        </div>
+
+        <!-- RIGHT TOP: TOKENS & AST -->
+        <div class="pane col-right">
+            <div style="display:flex; flex-direction:column; height:100%; overflow:hidden;">
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab(this,'tokens')">🔤 Tokens</div>
+                    <div class="tab" onclick="switchTab(this,'ast')">🌳 AST Tree</div>
+                    <div class="tabs-spacer"></div>
+                    <button class="expand-btn" onclick="openActivePane(this)" title="Open in full page">⛶ Expand</button>
+                </div>
+                <div id="tokens" class="tab-content active" style="padding:0.8rem;">
+                    <div class="token-grid" id="token-output"><div class="empty-state">Compile to view tokens</div></div>
+                </div>
+                <div id="ast" class="tab-content" style="padding:0.8rem;">
+                    <div id="ast-output"><div class="empty-state">Compile to view AST</div></div>
                 </div>
             </div>
+        </div>
 
-            <!-- LEXER VIEW -->
-            <div class="content-area" id="lexer">
-                <div id="lexer-errors-container"></div>
-                <div class="panel">
-                    <div class="panel-header">Lexical Analysis - Token Stream</div>
-                    <div class="panel-content">
-                        <div class="token-list" id="token-output">
-                            <div class="empty-state">Compile to view tokens</div>
-                        </div>
+        <!-- RIGHT BOTTOM: OUTPUTS -->
+        <div class="pane col-right">
+            <div style="display:flex; flex-direction:column; height:100%; overflow:hidden;">
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab(this,'symbol')">📊 Symbols</div>
+                    <div class="tab" onclick="switchTab(this,'rd-trace')">🌳 RD Tree</div>
+                    <div class="tab" onclick="switchTab(this,'ll1-trace')">📋 LL(1)</div>
+                    <div class="tab" onclick="switchTab(this,'lr-trace')">🔀 LR</div>
+                    <div class="tab" onclick="switchTab(this,'errors')">❌ Errors</div>
+                    <div class="tabs-spacer"></div>
+                    <button class="expand-btn" onclick="openActivePane(this)" title="Open in full page">⛶ Expand</button>
+                </div>
+
+                <div id="symbol" class="tab-content active" style="padding:0.8rem;">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Scope</th><th>Line</th></tr></thead>
+                            <tbody id="symbol-table"><tr><td colspan="5">Compile to view</td></tr></tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
 
-            <!-- SYMBOL TABLE VIEW -->
-            <div class="content-area" id="symbols">
-                <div id="symbols-errors-container"></div>
-                <div class="panel">
-                    <div class="panel-header">Symbol Table - Scope & Variable Tracking</div>
-                    <div class="panel-content">
-                        <div class="table-wrapper">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Kind</th>
-                                        <th>Type</th>
-                                        <th>Scope</th>
-                                        <th>Line</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="symbol-table-body">
-                                    <tr><td colspan="5" style="text-align: center; padding: 1.5rem;">Compile to populate table</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                <div id="rd-trace" class="tab-content" style="padding:0.8rem;">
+                    <div id="rd-output"><div class="empty-state">Compile to view RD parse tree</div></div>
+                </div>
+
+                <div id="ll1-trace" class="tab-content" style="padding:0.8rem;">
+                    <div id="ll1-output"><div class="empty-state">Compile to view LL(1) parse</div></div>
+                </div>
+
+                <div id="lr-trace" class="tab-content" style="padding:0.8rem;">
+                    <div id="lr-output"><div class="empty-state">Compile to view LR automaton</div></div>
+                </div>
+
+                <div id="errors" class="tab-content" style="padding:0.8rem;">
+                    <div id="errors-container"><div class="empty-state">No errors</div></div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- RD PARSER VIEW -->
-            <div class="content-area" id="rd">
-                <div id="rd-errors-container"></div>
-                <div class="panel">
-                    <div class="panel-header">Recursive Descent Parser - Trace</div>
-                    <div class="panel-content">
-                        <div class="trace-box" id="rd-trace">Compile to view parse trace</div>
-                    </div>
-                </div>
+    <!-- FULLSCREEN PANE MODAL -->
+    <div class="modal-overlay" id="pane-modal" onclick="if(event.target===this)closeModal()">
+        <div class="modal">
+            <div class="modal-head">
+                <span class="m-title" id="modal-title">Full View</span>
+                <button class="modal-close" onclick="closeModal()">✕ Close</button>
             </div>
-
-            <!-- LL(1) PARSER VIEW -->
-            <div class="content-area" id="ll1">
-                <div id="ll1-errors-container"></div>
-                <div class="panel">
-                    <div class="panel-header">LL(1) Predictive Parser - Trace</div>
-                    <div class="panel-content">
-                        <div class="trace-box" id="ll1-trace">Compile to view parse trace</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- LR PARSER VIEW -->
-            <div class="content-area" id="lr">
-                <div id="lr-errors-container"></div>
-                <div class="panel">
-                    <div class="panel-header">LR Parser - Expression Parsing Trace</div>
-                    <div class="panel-content">
-                        <div class="trace-box" id="lr-trace">Compile to view parse trace</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SUMMARY VIEW -->
-            <div class="content-area" id="summary">
-                <div class="two-col">
-                    <div class="panel">
-                        <div class="panel-header">Compilation Summary</div>
-                        <div class="panel-content">
-                            <div style="line-height: 2;">
-                                <div>Tokens: <strong style="color: var(--accent);" id="sum-tokens">0</strong></div>
-                                <div>Variables: <strong style="color: var(--accent);" id="sum-vars">0</strong></div>
-                                <div>Errors: <strong style="color: var(--error);" id="sum-errors">0</strong></div>
-                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-                                    Status: <strong style="color: var(--success);" id="sum-status">Not compiled</strong>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel">
-                        <div class="panel-header">All Errors & Warnings</div>
-                        <div class="panel-content">
-                            <div id="all-errors-container">
-                                <div class="empty-state">No errors</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+            <div class="modal-body" id="modal-body"></div>
         </div>
     </div>
 
     <script>
-        let lastCompilationData = null;
-
-        function switchView(viewName) {
-            document.querySelectorAll('.content-area').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            
-            document.getElementById(viewName)?.classList.add('active');
-            document.querySelector(`[data-view="${viewName}"]`)?.classList.add('active');
+        function switchTab(el, id) {
+            const container = el.closest('.tabs').parentElement;
+            container.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            container.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById(id)?.classList.add('active');
+        }
+        function updatePhase(name) {
+            document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+            document.getElementById(`phase-${name}`)?.classList.add('active');
+        }
+        function escapeHtml(t) {
+            const m = { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' };
+            return String(t).replace(/[&<>"']/g, c => m[c]);
         }
 
-        function showErrorBox(containerId, errors) {
-            const container = document.getElementById(containerId);
-            if (!errors || errors.length === 0) {
-                container.innerHTML = '';
-                return;
+        /* ---------- generic zoom wrapper ---------- */
+        function vizWrap(id, svg, hint) {
+            return `<div class="viz" id="${id}">
+                <div class="viz-toolbar">
+                    <button onclick="zoomViz('${id}',0.15)">+</button>
+                    <button onclick="zoomViz('${id}',-0.15)">−</button>
+                    <button onclick="zoomViz('${id}',0)">reset</button>
+                    ${hint ? `<span style="color:var(--text-secondary);font-size:0.7rem;align-self:center;margin-left:0.4rem;">${hint}</span>` : ''}
+                </div>
+                <div class="viz-canvas">${svg}</div>
+            </div>`;
+        }
+        function zoomViz(id, delta) {
+            const svg = document.querySelector('#'+id+' .viz-canvas svg');
+            if (!svg) return;
+            let z = parseFloat(svg.dataset.zoom || '1');
+            z = delta === 0 ? 1 : Math.min(3, Math.max(0.3, +(z + delta).toFixed(2)));
+            svg.dataset.zoom = z;
+            svg.setAttribute('width',  (+svg.dataset.basew) * z);
+            svg.setAttribute('height', (+svg.dataset.baseh) * z);
+        }
+
+        /* ---------- TOP-DOWN FLOW TREE (AST + RD call tree) ---------- */
+        function renderTree(rootData) {
+            if (!rootData) return '<div class="empty-state">Nothing to display</div>';
+
+            const getLabel = n => (n.label !== undefined)
+                ? n.label
+                : (n.value ? `${n.type}: ${n.value}` : n.type);
+            const getKind = n => {
+                if (n.kind === 'match') return 'leaf';
+                if (n.kind === 'error') return 'error';
+                if (n.kind === 'proc') return 'inner';
+                // AST node: leaf if no children
+                return (n.children && n.children.length) ? 'inner' : 'leaf';
+            };
+
+            const SLOT = 152, VGAP = 80, PAD = 24, NH = 28;
+            const nodes = [], edges = [];
+            let leafX = 0, maxDepth = 0;
+
+            function walk(n, depth) {
+                maxDepth = Math.max(maxDepth, depth);
+                const obj = { label: getLabel(n), kind: getKind(n), depth, children: [] };
+                const kids = n.children || [];
+                if (kids.length) {
+                    kids.forEach(c => obj.children.push(walk(c, depth + 1)));
+                    obj.gx = (obj.children[0].gx + obj.children[obj.children.length - 1].gx) / 2;
+                } else {
+                    obj.gx = leafX; leafX += 1;
+                }
+                nodes.push(obj);
+                obj.children.forEach(c => edges.push([obj, c]));
+                return obj;
             }
-            
-            let html = `<div class="error-box">
-                <div class="error-count">❌ ${errors.length} Error(s):</div>`;
-            
-            errors.forEach(err => {
-                html += `<div class="error-item">• ${escapeHtml(err)}</div>`;
+            walk(rootData, 0);
+
+            const colW = SLOT;
+            const px = n => PAD + n.gx * colW + colW / 2;
+            const py = n => PAD + n.depth * VGAP + NH / 2;
+            const width  = PAD * 2 + Math.max(leafX, 1) * colW;
+            const height = PAD * 2 + maxDepth * VGAP + NH + 10;
+
+            let svg = `<svg class="flow-tree" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" data-basew="${width}" data-baseh="${height}" data-zoom="1" xmlns="http://www.w3.org/2000/svg">`;
+            edges.forEach(([p, c]) => {
+                const x1 = px(p), y1 = py(p) + NH / 2;
+                const x2 = px(c), y2 = py(c) - NH / 2;
+                const my = (y1 + y2) / 2;
+                svg += `<path class="ft-edge" d="M ${x1} ${y1} C ${x1} ${my}, ${x2} ${my}, ${x2} ${y2}"/>`;
             });
-            
-            html += '</div>';
-            container.innerHTML = html;
+            nodes.forEach(n => {
+                const cx = px(n), cy = py(n);
+                const w = Math.max(64, n.label.length * 6.3 + 16);
+                svg += `<g class="ft-node ${n.kind}">
+                    <rect x="${cx - w/2}" y="${cy - NH/2}" width="${w}" height="${NH}" rx="6"/>
+                    <text x="${cx}" y="${cy + 3.5}" text-anchor="middle">${escapeHtml(n.label)}</text>
+                </g>`;
+            });
+            svg += `</svg>`;
+            return svg;
         }
 
-        function escapeHtml(text) {
-            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return String(text).replace(/[&<>"']/g, m => map[m]);
+        /* ---------- LR AUTOMATON (state machine) ---------- */
+        function renderAutomaton(data) {
+            if (!data || !data.states || !data.states.length)
+                return '<div class="empty-state">No automaton</div>';
+
+            // layered placement for the fixed 12-state SLR grammar
+            const layers = [[0], [1,2,3,4,5], [6,7,8], [9,10,11]];
+            const COLW = 250, ROWH = 165, PADX = 30, PADY = 80;
+            const pos = {};
+            layers.forEach((layer, li) => layer.forEach((sid, ri) => {
+                pos[sid] = { x: PADX + li * COLW, y: PADY + ri * ROWH };
+            }));
+            // fallback for any unplaced state
+            let extra = 0;
+            data.states.forEach(s => { if (!pos[s.id]) { pos[s.id] = { x: PADX, y: PADY + (layers.length + extra) * ROWH }; extra++; } });
+
+            const NODEW = 205;
+            const byId = {}; data.states.forEach(s => byId[s.id] = s);
+            const nodeH = s => 26 + s.items.length * 13 + 8;
+
+            let maxX = 0, maxY = 0, minY = 9999;
+            Object.entries(pos).forEach(([id, p]) => {
+                maxX = Math.max(maxX, p.x + NODEW);
+                maxY = Math.max(maxY, p.y + nodeH(byId[id]));
+                minY = Math.min(minY, p.y);
+            });
+            const width = maxX + PADX;
+            const height = maxY + 90;
+
+            let svg = `<svg class="automaton" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" data-basew="${width}" data-baseh="${height}" data-zoom="1" xmlns="http://www.w3.org/2000/svg">`;
+            svg += `<defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L8,3 z" class="arrow-head"/></marker></defs>`;
+
+            data.edges.forEach(e => {
+                const a = pos[e.from], b = pos[e.to];
+                if (!a || !b) return;
+                const ah = nodeH(byId[e.from]), bh = nodeH(byId[e.to]);
+                let path, lx, ly;
+                if (e.from === e.to) {
+                    // self-loop above
+                    path = `M ${a.x + NODEW - 25} ${a.y} C ${a.x + NODEW + 35} ${a.y - 55}, ${a.x - 35} ${a.y - 55}, ${a.x + 25} ${a.y}`;
+                    lx = a.x + NODEW/2; ly = a.y - 42;
+                } else if (b.x > a.x) {
+                    const x1 = a.x + NODEW, y1 = a.y + ah/2, x2 = b.x, y2 = b.y + bh/2;
+                    const mx = (x1 + x2) / 2;
+                    path = `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+                    lx = mx; ly = (y1 + y2)/2 - 5;
+                } else if (b.x === a.x) {
+                    // same column, different row -> bow out to the right
+                    const x1 = a.x + NODEW, y1 = a.y + ah/2, x2 = b.x + NODEW, y2 = b.y + bh/2;
+                    const off = 55;
+                    path = `M ${x1} ${y1} C ${x1 + off} ${y1}, ${x2 + off} ${y2}, ${x2} ${y2}`;
+                    lx = x1 + off - 8; ly = (y1 + y2)/2;
+                } else {
+                    // backward edge -> route below
+                    const my = maxY + 35;
+                    path = `M ${a.x + 25} ${a.y + ah} C ${a.x - 55} ${my}, ${b.x + NODEW + 55} ${my}, ${b.x + NODEW - 25} ${b.y + bh}`;
+                    lx = (a.x + b.x + NODEW) / 2; ly = my - 5;
+                }
+                svg += `<path class="auto-edge" d="${path}" marker-end="url(#arrow)"/>`;
+                svg += `<text class="edge-label" x="${lx}" y="${ly}" text-anchor="middle">${escapeHtml(e.label)}</text>`;
+            });
+
+            data.states.forEach(s => {
+                const p = pos[s.id]; if (!p) return;
+                const h = nodeH(s);
+                svg += `<g class="auto-state"><rect x="${p.x}" y="${p.y}" width="${NODEW}" height="${h}" rx="8"/>`;
+                svg += `<text class="state-title" x="${p.x + 10}" y="${p.y + 18}">I${s.id}</text>`;
+                s.items.forEach((it, i) => {
+                    svg += `<text class="state-item" x="${p.x + 12}" y="${p.y + 34 + i*13}">${escapeHtml(it)}</text>`;
+                });
+                svg += `</g>`;
+            });
+            svg += `</svg>`;
+            return svg;
+        }
+
+        /* ---------- LL(1) predictive table ---------- */
+        function renderLL1Table(table) {
+            if (!table || !Object.keys(table).length) return '';
+            const nts = Object.keys(table);
+            const terms = [];
+            nts.forEach(nt => Object.keys(table[nt]).forEach(t => { if (!terms.includes(t)) terms.push(t); }));
+            let html = '<div class="grid-title">Predictive Parse Table (M[NT, terminal])</div>';
+            html += '<div class="table-wrapper"><table class="ll1-grid"><thead><tr><th>NT</th>';
+            terms.forEach(t => html += `<th>${escapeHtml(t)}</th>`);
+            html += '</tr></thead><tbody>';
+            nts.forEach(nt => {
+                html += `<tr><td class="nt-cell">${escapeHtml(nt)}</td>`;
+                terms.forEach(t => {
+                    if (table[nt][t]) {
+                        html += `<td class="prod-cell">${escapeHtml(nt)} → ${escapeHtml(table[nt][t].join(' '))}</td>`;
+                    } else html += '<td></td>';
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+            return html;
+        }
+
+        /* ---------- step trace tables (LL1 + LR) ---------- */
+        function renderLL1Steps(steps) {
+            if (!steps || !steps.length) return '<div class="empty-state">No parse steps</div>';
+            let html = '<div class="grid-title" style="margin-top:1rem;">Stack / Input / Action Trace</div>';
+            html += '<div class="table-wrapper"><table class="step-grid"><thead><tr><th>#</th><th>Stack</th><th>Input</th><th>Action</th></tr></thead><tbody>';
+            steps.forEach(s => {
+                html += `<tr class="step-${s.type}"><td>${s.step}</td><td>${escapeHtml(s.stack)}</td><td>${escapeHtml(s.input)}</td><td>${escapeHtml(s.action)}</td></tr>`;
+            });
+            html += '</tbody></table></div>';
+            return html;
+        }
+        function renderLRSteps(steps) {
+            if (!steps || !steps.length) return '<div class="empty-state">No parse steps</div>';
+            let html = '<div class="grid-title" style="margin-top:1rem;">Shift / Reduce Trace</div>';
+            html += '<div class="table-wrapper"><table class="step-grid"><thead><tr><th>State Stack</th><th>Symbols</th><th>Input</th><th>Action</th></tr></thead><tbody>';
+            steps.forEach(s => {
+                html += `<tr class="step-${s.type}"><td>${escapeHtml(s.state_stack)}</td><td>${escapeHtml(s.symbol_stack)}</td><td>${escapeHtml(s.input)}</td><td>${escapeHtml(s.action)}</td></tr>`;
+            });
+            html += '</tbody></table></div>';
+            return html;
         }
 
         async function compile() {
             const code = document.getElementById('source-code').value;
             const btn = document.getElementById('compile-btn');
-            
-            btn.classList.add('loading');
-            btn.textContent = '⟳ Compiling...';
+            btn.classList.add('loading'); btn.textContent = '⟳';
             document.getElementById('status-text').textContent = 'Compiling...';
+            updatePhase('lexer');
 
             try {
-                const response = await fetch('/compile', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: code })
+                const res = await fetch('/compile', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
                 });
+                const data = await res.json();
+                lastData = data;
 
-                const data = await response.json();
-                lastCompilationData = data;
+                // TOKENS
+                updatePhase('parser');
+                const tokens = (data.tokens || []).map(t => `
+                    <div class="token"><div class="token-val">${escapeHtml(t.value)}</div><div class="token-tag">${escapeHtml(t.tag)}</div></div>
+                `).join('');
+                document.getElementById('token-output').innerHTML = tokens || '<div class="empty-state">No tokens</div>';
 
-                // Show errors on all relevant views
-                showErrorBox('lexer-errors-container', data.errors);
-                showErrorBox('symbols-errors-container', data.errors);
-                showErrorBox('rd-errors-container', data.errors);
-                showErrorBox('ll1-errors-container', data.errors);
-                showErrorBox('lr-errors-container', data.errors);
+                // AST (flow tree)
+                document.getElementById('ast-output').innerHTML = data.ast
+                    ? vizWrap('viz-ast', renderTree(data.ast), 'semantic AST')
+                    : '<div class="empty-state">No AST</div>';
 
-                // RENDER TOKENS
-                const tokenHtml = data.tokens
-                    .filter(t => t.tag !== 'EOF')
-                    .map(t => `<span class="token"><span class="token-val">${escapeHtml(t.value)}</span><span class="token-tag">${escapeHtml(t.tag)}</span></span>`)
-                    .join('');
-                document.getElementById('token-output').innerHTML = tokenHtml || '<div class="empty-state">No tokens generated</div>';
-
-                // RENDER SYMBOL TABLE
-                let tableHtml = '';
-                data.symbol_table.forEach((scope, level) => {
-                    for (const [name, info] of Object.entries(scope)) {
-                        tableHtml += `<tr>
-                            <td><strong>${escapeHtml(name)}</strong></td>
-                            <td>${escapeHtml(info.kind)}</td>
-                            <td>${escapeHtml(info.type || 'N/A')}</td>
-                            <td>Lvl ${level}</td>
-                            <td>${info.line}</td>
-                        </tr>`;
-                    }
+                // SYMBOLS (from persistent records)
+                updatePhase('semantic');
+                let symHtml = '';
+                (data.symbol_table || []).forEach(r => {
+                    symHtml += `<tr>
+                        <td><strong>${escapeHtml(r.name)}</strong></td>
+                        <td>${escapeHtml(r.kind)}</td>
+                        <td>${escapeHtml(r.type || '-')}</td>
+                        <td>${r.scope}</td>
+                        <td>${r.line}</td>
+                    </tr>`;
                 });
-                document.getElementById('symbol-table-body').innerHTML = tableHtml || 
-                    '<tr><td colspan="5" style="text-align:center; color: var(--text-secondary);">No variables declared</td></tr>';
+                document.getElementById('symbol-table').innerHTML = symHtml || '<tr><td colspan="5">No symbols</td></tr>';
 
-                // RENDER PARSER TRACES
-               // RENDER PARSER TRACES
-                document.getElementById('rd-trace').textContent =
-                    data.rd_trace || 'No RD trace available';
+                // RD -> parse/call tree
+                updatePhase('complete');
+                document.getElementById('rd-output').innerHTML = (data.rd_tree
+                    ? vizWrap('viz-rd', renderTree(data.rd_tree), 'recursive-descent call tree')
+                    : '<div class="empty-state">No RD tree</div>')
+                    + `<details class="log"><summary>Raw RD log</summary><pre>${escapeHtml(data.rd_trace || '')}</pre></details>`;
 
-                document.getElementById('ll1-trace').textContent =
-                    data.ll1_trace || 'No LL(1) trace available';
+                // LL(1) -> table + steps
+                document.getElementById('ll1-output').innerHTML =
+                    renderLL1Table(data.ll1_table) + renderLL1Steps(data.ll1_steps);
 
-                document.getElementById('lr-trace').textContent =
-                    data.lr_trace || 'No LR trace available';
+                // LR -> automaton + steps
+                document.getElementById('lr-output').innerHTML =
+                    vizWrap('viz-lr', renderAutomaton(data.lr_automaton), 'SLR(1) automaton')
+                    + renderLRSteps(data.lr_steps)
+                    + `<details class="log"><summary>Raw LR log</summary><pre>${escapeHtml(data.lr_trace || '')}</pre></details>`;
 
-                // UPDATE SUMMARY
-                const varCount = Object.values(data.symbol_table).reduce((sum, scope) => sum + Object.keys(scope).length, 0);
-                document.getElementById('sum-tokens').textContent = data.tokens.filter(t => t.tag !== 'EOF').length;
-                document.getElementById('sum-vars').textContent = varCount;
-                document.getElementById('sum-errors').textContent = data.errors.length;
-                document.getElementById('sum-status').textContent = data.errors.length === 0 ? '✓ Success' : '⚠ Has Errors';
-                document.getElementById('sum-status').style.color = data.errors.length === 0 ? 'var(--success)' : 'var(--error)';
-
-                // ALL ERRORS
-                if (data.errors.length > 0) {
-                    const errHtml = data.errors.map(e => `<div class="error-item">• ${escapeHtml(e)}</div>`).join('');
-                    document.getElementById('all-errors-container').innerHTML = errHtml;
+                // ERRORS
+                const errs = data.errors || [];
+                if (errs.length) {
+                    let errHtml = `<div class="error-box"><div class="error-title">⚠️ ${errs.length} Error(s)</div>`;
+                    errs.forEach(e => errHtml += `<div class="error-item">• ${escapeHtml(e)}</div>`);
+                    errHtml += `</div>`;
+                    document.getElementById('errors-container').innerHTML = errHtml;
                 } else {
-                    document.getElementById('all-errors-container').innerHTML = '<div class="empty-state">✓ No errors</div>';
+                    document.getElementById('errors-container').innerHTML = '<div class="empty-state">✓ No errors</div>';
                 }
 
-                btn.classList.remove('loading');
-                btn.textContent = '✓ Done';
-                document.getElementById('status-text').textContent = `Compiled (${data.errors.length} errors)`;
-                
+                btn.classList.remove('loading'); btn.textContent = '✓';
+                document.getElementById('status-text').textContent = `${errs.length} errors`;
                 setTimeout(() => { btn.textContent = '▶ Compile'; }, 2000);
 
-            } catch (err) {
-                alert('Error: ' + err.message);
-                btn.classList.remove('loading');
-                btn.textContent = '▶ Compile';
-                document.getElementById('status-text').textContent = 'Error';
+            } catch (e) {
+                alert('Error: ' + e.message);
+                btn.classList.remove('loading'); btn.textContent = '▶ Compile';
+            }
+        }
+        /* ---------- FULLSCREEN PANE VIEW ---------- */
+        let lastData = null;
+        const PANE_TITLES = {
+            'tokens': '🔤 Tokens', 'ast': '🌳 AST — Semantic Tree',
+            'symbol': '📊 Symbol Table', 'rd-trace': '🌳 Recursive-Descent Parse Tree',
+            'll1-trace': '📋 LL(1) Predictive Parse', 'lr-trace': '🔀 LR — SLR(1) Automaton',
+            'errors': '❌ Errors'
+        };
+
+        // build full-view HTML for a pane: tree/diagram on the left, textual output on the right
+        function paneFull(id) {
+            const d = lastData;
+            if (!d) return '<div class="empty-state">Compile first to view.</div>';
+
+            const split = (visual, outputTitle, outputBody) => {
+                const hasOut = !!outputBody;
+                return `<div class="fs-split ${hasOut ? 'has-output' : ''}">
+                    <div class="fs-visual">${visual}</div>
+                    ${hasOut ? `<div class="fs-output"><h4>${outputTitle}</h4>${outputBody}</div>` : ''}
+                </div>`;
+            };
+
+            switch (id) {
+                case 'tokens': {
+                    const t = (d.tokens || []).map(t => `<div class="token"><div class="token-val">${escapeHtml(t.value)}</div><div class="token-tag">${escapeHtml(t.tag)}</div></div>`).join('');
+                    return `<div class="token-grid">${t || '<div class="empty-state">No tokens</div>'}</div>`;
+                }
+                case 'ast':
+                    return d.ast ? vizWrap('viz-ast-fs', renderTree(d.ast), 'semantic AST')
+                                 : '<div class="empty-state">No AST</div>';
+                case 'symbol': {
+                    let rows = (d.symbol_table || []).map(r => `<tr><td><strong>${escapeHtml(r.name)}</strong></td><td>${escapeHtml(r.kind)}</td><td>${escapeHtml(r.type || '-')}</td><td>${r.scope}</td><td>${r.line}</td></tr>`).join('');
+                    return `<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Kind</th><th>Type</th><th>Scope</th><th>Line</th></tr></thead><tbody>${rows || '<tr><td colspan="5">No symbols</td></tr>'}</tbody></table></div>`;
+                }
+                case 'rd-trace': {
+                    const tree = d.rd_tree ? vizWrap('viz-rd-fs', renderTree(d.rd_tree), 'recursive-descent call tree')
+                                           : '<div class="empty-state">No RD tree</div>';
+                    return split(tree, 'Parse Output', `<pre>${escapeHtml(d.rd_trace || '(no output)')}</pre>`);
+                }
+                case 'll1-trace':
+                    return renderLL1Table(d.ll1_table) + renderLL1Steps(d.ll1_steps);
+                case 'lr-trace': {
+                    const auto = vizWrap('viz-lr-fs', renderAutomaton(d.lr_automaton), 'SLR(1) automaton');
+                    const steps = renderLRSteps(d.lr_steps);
+                    return split(auto + steps, 'Parse Output', `<pre>${escapeHtml(d.lr_trace || '(no output)')}</pre>`);
+                }
+                case 'errors': {
+                    const errs = d.errors || [];
+                    if (!errs.length) return '<div class="empty-state">✓ No errors</div>';
+                    return `<div class="error-box"><div class="error-title">⚠️ ${errs.length} Error(s)</div>${errs.map(e => `<div class="error-item">• ${escapeHtml(e)}</div>`).join('')}</div>`;
+                }
+                default: return '<div class="empty-state">Nothing to display.</div>';
             }
         }
 
-        function extractSection(text, marker) {
-            const lines = text.split('\n');
-            const startIdx = lines.findIndex(l => l.includes(marker));
-            if (startIdx === -1) return null;
-            
-            const endIdx = lines.findIndex((l, i) => i > startIdx && l.includes('---'));
-            const section = lines.slice(startIdx + 1, endIdx === -1 ? undefined : endIdx).join('\n').trim();
-            return section || null;
+        function openActivePane(btn) {
+            const wrap = btn.closest('.tabs').parentElement;
+            const active = wrap.querySelector('.tab-content.active');
+            if (!active) return;
+            openModal(active.id);
         }
+        function openModal(id) {
+            document.getElementById('modal-title').textContent = PANE_TITLES[id] || 'Full View';
+            document.getElementById('modal-body').innerHTML = paneFull(id);
+            document.getElementById('pane-modal').classList.add('open');
+        }
+        function closeModal() {
+            document.getElementById('pane-modal').classList.remove('open');
+            document.getElementById('modal-body').innerHTML = '';
+        }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
     </script>
-
 </body>
 </html>

@@ -1,14 +1,12 @@
-# CS471L Mini Compiler Project
-# Module: LL(1) Predictive Parser
-
+# src/parser_ll1.py
 class LL1Parser:
     def __init__(self, tokens, error_handler):
         self.tokens = tokens
         self.pos = 0
         self.error_handler = error_handler
         self.stack = ['$', 'S']
+        self.steps_history = []  # Structural visual trace arrays
 
-        # LL(1) parsing table
         self.table = {
             'S':  {'program': ['program', 'id', ';', 'begin', 'L', 'end', '.']},
             'L':  {'id': ['A', "L'"]},
@@ -22,60 +20,57 @@ class LL1Parser:
         }
 
     def parse(self):
-        print("\n--- Starting LL(1) Parse ---")
-
-        # IMPORTANT: avoid double EOF append bug
         if self.tokens[-1][0] != 'EOF':
             self.tokens.append(('EOF', '$', -1, -1))
 
-        step = 0
-
+        step_num = 0
         while len(self.stack) > 0:
-            step += 1
-
+            step_num += 1
             top = self.stack[-1]
             current_tag, current_val, line, col = self.tokens[self.pos]
+            lookahead = current_val if current_tag in ('KEYWORD', 'PUNCT', 'ASSIGN', 'EOF') else current_tag.lower()
 
-            lookahead = current_val if current_tag in (
-                'KEYWORD', 'PUNCT', 'ASSIGN', 'EOF'
-            ) else current_tag.lower()
+            # Record a snapshot of current live structures for custom diagrams
+            stack_snapshot = list(self.stack)
+            input_snapshot = [t[1] for t in self.tokens[self.pos:]]
 
-            print(f"[LL1 Step {step}] Stack: {self.stack}")
-            print(f"[LL1 Step {step}] Input: {self.tokens[self.pos:]}")
-            print(f"[LL1 Step {step}] Top: {top}, Lookahead: {lookahead}")
+            action_desc = ""
+            action_type = "match"
 
-            # MATCH CASE
             if top == lookahead or (top == '$' and current_tag == 'EOF'):
-                print(f"[LL1] MATCH: {top}")
+                action_desc = f"Match '{top}'"
                 self.stack.pop()
                 self.pos += 1
-                continue
-
-            # NON-TERMINAL CASE
-            if top in self.table:
+                action_type = "match"
+            elif top in self.table:
                 if lookahead in self.table[top]:
                     production = self.table[top][lookahead]
-
-                    print(f"[LL1] APPLY: {top} → {production}")
-
+                    action_desc = f"{top} \u2192 {' '.join(production)}"
                     self.stack.pop()
-
                     if production != ['epsilon']:
                         for symbol in reversed(production):
                             self.stack.append(symbol)
+                    action_type = "apply"
                 else:
-                    self.error_handler.report(
-                        line, col,
-                        f"LL(1) Syntax Error: Unexpected '{lookahead}'"
-                    )
-                    print("[LL1] ERROR: No rule found")
+                    action_desc = f"Syntax Error: Unexpected '{lookahead}'"
+                    action_type = "error"
+                    self.error_handler.report(line, col, action_desc)
+                    self._record(step_num, stack_snapshot, input_snapshot, action_desc, action_type)
                     break
             else:
-                self.error_handler.report(
-                    line, col,
-                    f"LL(1) Syntax Error: Expected '{top}'"
-                )
-                print("[LL1] ERROR: Invalid stack symbol")
+                action_desc = f"Syntax Error: Expected '{top}'"
+                action_type = "error"
+                self.error_handler.report(line, col, action_desc)
+                self._record(step_num, stack_snapshot, input_snapshot, action_desc, action_type)
                 break
 
-        print("--- LL(1) Parse Complete ---")
+            self._record(step_num, stack_snapshot, input_snapshot, action_desc, action_type)
+
+    def _record(self, step_num, stack_snapshot, input_snapshot, action_desc, action_type):
+        self.steps_history.append({
+            'step': step_num,
+            'stack': ' '.join(stack_snapshot),
+            'input': ' '.join(input_snapshot[:6]) + ("..." if len(input_snapshot) > 6 else ""),
+            'action': action_desc,
+            'type': action_type
+        })
